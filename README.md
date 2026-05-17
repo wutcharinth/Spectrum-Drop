@@ -2,6 +2,8 @@
 
 A color-mixing merge puzzle. Drop tiles into columns, merge matching numbers, blend the three primaries for bonus multipliers, and survive the rising floor.
 
+**Live:** <https://spectrum-drop.pages.dev>
+
 ## Play
 
 Tap (or click) a column to drop. The current tile is shown above the column you're hovering.
