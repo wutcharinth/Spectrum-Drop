@@ -783,7 +783,7 @@
   const COLS = 6, ROWS = 10;
   const HEX = {1:'#ff453a',2:'#30d158',4:'#0a84ff',3:'#ffd60a',5:'#bf5af2',6:'#64d2ff',7:'#f5f5f7'};
   const DARK_TEXT = new Set([3, 6, 7]);
-  const MENACE_INTERVAL = 12;
+  const MENACE_INTERVAL = 10;
   const WARN_THRESHOLD = 3;
   const MILESTONES = [64, 128, 256, 512, 1024, 2048];
 
@@ -796,30 +796,30 @@
   function saveBest() { localStorage.setItem('sd-best', String(best)); }
 
   function currentMenaceInterval() {
-    if (score >= 6000) return 6;
-    if (score >= 3500) return 8;
-    if (score >= 1500) return 10;
+    if (score >= 4500) return 5;
+    if (score >= 2500) return 6;
+    if (score >= 1000) return 8;
     return MENACE_INTERVAL;
   }
 
   function makeTile() {
     const r = Math.random();
-    const wildChance = score >= 5000 ? 0.03 : (score >= 2000 ? 0.04 : 0.05);
+    const wildChance = score >= 4000 ? 0.02 : (score >= 1500 ? 0.03 : 0.04);
     if (r < wildChance) {
       return { wild: true, number: null, color: 7 };
     } else if (r < wildChance + 0.05) {
       const primaries = [1, 2, 4];
-      const n = Math.random() < 0.75 ? 2 : 4;
+      const n = Math.random() < 0.7 ? 2 : 4;
       return { bomb: true, color: primaries[Math.floor(Math.random()*3)], number: n };
     } else {
       const primaries = [1, 2, 4];
       const c = primaries[Math.floor(Math.random() * 3)];
       const rn = Math.random();
       let n;
-      if (score >= 5000)      n = rn < 0.55 ? 2 : (rn < 0.85 ? 4 : 8);
-      else if (score >= 2500) n = rn < 0.65 ? 2 : (rn < 0.93 ? 4 : 8);
-      else if (score >= 1000) n = rn < 0.75 ? 2 : 4;
-      else                    n = rn < 0.85 ? 2 : 4;
+      if (score >= 4000)      n = rn < 0.45 ? 2 : (rn < 0.78 ? 4 : 8);
+      else if (score >= 2000) n = rn < 0.55 ? 2 : (rn < 0.88 ? 4 : 8);
+      else if (score >= 800)  n = rn < 0.65 ? 2 : (rn < 0.97 ? 4 : 8);
+      else                    n = rn < 0.75 ? 2 : 4;
       return { color: c, number: n };
     }
   }
@@ -827,11 +827,12 @@
   function makeRiseTile() {
     const primaries = [1, 2, 4];
     const blends = [3, 5, 6];
-    const useBlend = score >= 5000 && Math.random() < 0.15;
+    const useBlend = score >= 3000 && Math.random() < (score >= 5000 ? 0.2 : 0.1);
     const color = useBlend
       ? blends[Math.floor(Math.random() * 3)]
       : primaries[Math.floor(Math.random() * 3)];
-    return { color, number: 2 };
+    const n = (score >= 3000 && Math.random() < 0.25) ? 4 : 2;
+    return { color, number: n };
   }
 
   function findClusters() {
@@ -1414,7 +1415,12 @@
   function setupInput() {
     const playArea = document.querySelector('.sd-play-area');
 
+    function isOverlayTarget(e) {
+      return gameOver || (e.target && e.target.closest && e.target.closest('.sd-overlay'));
+    }
+
     playArea.addEventListener('pointerdown', (e) => {
+      if (isOverlayTarget(e)) return;
       unlockAudio();
       pointerStart = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };
       hoverCol = colFromX(e.clientX);
@@ -1424,6 +1430,7 @@
     });
 
     playArea.addEventListener('pointermove', (e) => {
+      if (isOverlayTarget(e)) return;
       const newCol = colFromX(e.clientX);
       if (newCol !== hoverCol) {
         hoverCol = newCol;
