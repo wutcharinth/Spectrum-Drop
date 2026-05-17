@@ -1,0 +1,7 @@
+name = "spectrum-drop"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "."
+
+[[kv_namespaces]]
+binding = "SCORES"
+id = "51b65e30439e4e70b8b14d7d563ebfe2"

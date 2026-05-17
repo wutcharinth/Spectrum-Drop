@@ -46,14 +46,23 @@
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 50%; color: #f5f5f7;
-    font-size: 17px; cursor: pointer; padding: 0;
+    font-size: 16px; cursor: pointer; padding: 0;
     display: flex; align-items: center; justify-content: center;
     -webkit-tap-highlight-color: transparent;
-    transition: transform 0.08s, background 0.12s;
-    line-height: 1;
+    transition: transform 0.08s, background 0.12s, opacity 0.15s;
+    line-height: 1; position: relative;
   }
   .sd-icon-btn:hover { background: rgba(255,255,255,0.12); }
-  .sd-icon-btn:active { transform: scale(0.9); }
+  .sd-icon-btn:active { transform: scale(0.88); }
+  .sd-icon-btn.off { opacity: 0.4; }
+  .sd-icon-btn.off::after {
+    content: ''; position: absolute;
+    left: 18%; right: 18%; top: 48%; height: 2px;
+    background: #ff453a;
+    transform: rotate(-30deg);
+    border-radius: 2px;
+    pointer-events: none;
+  }
   .sd-score {
     flex: 1; text-align: center;
     font-size: clamp(22px, 6vw, 30px); font-weight: 800;
@@ -287,6 +296,87 @@
     letter-spacing: 0.04em;
   }
   .sd-overlay .sd-btn:hover { filter: brightness(1.12); background: linear-gradient(135deg, #0a84ff 0%, #bf5af2 100%); }
+  .sd-submit-row {
+    display: none; gap: 8px; align-items: center;
+    margin-top: 12px; width: 100%; max-width: 280px;
+    justify-content: center;
+  }
+  .sd-submit-row.show { display: flex; }
+  .sd-name-input {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-size: 14px; font-weight: 700;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex: 1; min-width: 0;
+    outline: none;
+    text-align: center;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .sd-name-input:focus {
+    border-color: rgba(10,132,255,0.7);
+    background: rgba(255,255,255,0.15);
+  }
+  .sd-name-input::placeholder { color: rgba(255,255,255,0.35); letter-spacing: 0.1em; }
+  .sd-submit-btn {
+    flex-shrink: 0;
+    padding: 11px 18px; min-height: 0; font-size: 13px;
+    background: linear-gradient(135deg, #30d158 0%, #0a84ff 100%);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    border-radius: 999px;
+    cursor: pointer; font-weight: 700; font-family: inherit;
+    letter-spacing: 0.04em;
+    transition: transform 0.08s, filter 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sd-submit-btn:hover { filter: brightness(1.12); }
+  .sd-submit-btn:active { transform: scale(0.96); }
+  .sd-submit-btn:disabled { opacity: 0.5; cursor: default; }
+  .sd-leaderboard {
+    width: 100%; max-width: 280px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    font-variant-numeric: tabular-nums;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+  .sd-leaderboard-title {
+    font-size: 10px; opacity: 0.5;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    text-align: center; margin: 0 0 6px; font-weight: 700;
+  }
+  .sd-leaderboard-row {
+    display: flex; gap: 10px;
+    padding: 4px 8px;
+    align-items: center;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+  .sd-leaderboard-row.you {
+    background: rgba(10,132,255,0.22);
+    box-shadow: inset 0 0 0 1px rgba(10,132,255,0.45);
+  }
+  .sd-leaderboard-rank {
+    width: 18px; opacity: 0.5; font-weight: 700; text-align: right;
+  }
+  .sd-leaderboard-row.you .sd-leaderboard-rank { opacity: 1; color: #64d2ff; }
+  .sd-leaderboard-name {
+    flex: 1; opacity: 0.85; font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .sd-leaderboard-row.you .sd-leaderboard-name { opacity: 1; }
+  .sd-leaderboard-score { font-weight: 700; }
+  .sd-leaderboard-empty {
+    text-align: center; opacity: 0.4;
+    font-size: 12px; padding: 12px 0;
+  }
   .sd-flash { animation: cell-flash 0.4s ease-out; }
   @keyframes cell-flash {
     0% { background: rgba(255,80,80,0.25); }
@@ -364,7 +454,8 @@
     <div class="sd-score" id="sd-score">0</div>
     <div class="sd-rise-chip" id="sd-stat-rise"><span id="sd-rise">12</span></div>
     <div class="sd-next-chip"><div class="sd-tile-mini" id="sd-next">2</div></div>
-    <button class="sd-icon-btn" id="sd-mute" aria-label="Toggle sound">🔊</button>
+    <button class="sd-icon-btn" id="sd-bgm-btn" aria-label="Toggle music">🎵</button>
+    <button class="sd-icon-btn" id="sd-sfx-btn" aria-label="Toggle sound effects">🔊</button>
   </div>
   <div class="sd-play-area">
     <div class="sd-preview-row" id="sd-preview"></div>
@@ -393,6 +484,14 @@
         <p class="sd-overlay-meta">Game Over</p>
         <div class="sd-overlay-score" id="sd-final">0</div>
         <p class="sd-overlay-best">Best <span id="sd-final-best">0</span></p>
+        <div class="sd-submit-row" id="sd-submit-row">
+          <input type="text" class="sd-name-input" id="sd-name-input" placeholder="YOUR NAME" maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+          <button class="sd-submit-btn" id="sd-submit-btn">Submit</button>
+        </div>
+        <div class="sd-leaderboard" id="sd-leaderboard">
+          <p class="sd-leaderboard-title">Top 10 — Global</p>
+          <div class="sd-leaderboard-empty">Loading…</div>
+        </div>
         <button class="sd-btn" id="sd-overlay-restart">Play Again</button>
       </div>
     </div>
@@ -401,7 +500,16 @@
 <script>
 (function(){
   // ===================== AUDIO =====================
-  let muted = localStorage.getItem('sd-muted') === '1';
+  let sfxMuted = localStorage.getItem('sd-sfx-muted') === '1';
+  let bgmMuted = localStorage.getItem('sd-bgm-muted') === '1';
+  // Migrate legacy single-mute setting
+  const _legacyMute = localStorage.getItem('sd-muted');
+  if (_legacyMute !== null && localStorage.getItem('sd-sfx-muted') === null) {
+    sfxMuted = bgmMuted = (_legacyMute === '1');
+    localStorage.setItem('sd-sfx-muted', sfxMuted ? '1' : '0');
+    localStorage.setItem('sd-bgm-muted', bgmMuted ? '1' : '0');
+    localStorage.removeItem('sd-muted');
+  }
   let audioUnlocked = false;
   let stingerEl = null;
 
@@ -442,7 +550,7 @@
   let bgmFadeRAF = null;
 
   function sfx(name, opts) {
-    if (muted || !audioUnlocked) return;
+    if (sfxMuted || !audioUnlocked) return;
     const def = SFX[name];
     if (!def) return;
     let a = def.pool.find(x => x.paused || x.ended);
@@ -478,7 +586,7 @@
     const next = (activeBgm === bgmA) ? bgmB : bgmA;
     next.src = url;
     next.volume = 0;
-    if (muted) { try { next.pause(); } catch(_){} return; }
+    if (bgmMuted) { try { next.pause(); } catch(_){} return; }
     const pp = next.play();
     if (pp && pp.catch) pp.catch(() => {});
 
@@ -516,7 +624,7 @@
   }
 
   function playStinger(url, vol) {
-    if (muted || !audioUnlocked) return;
+    if (sfxMuted || !audioUnlocked) return;
     if (!stingerEl) stingerEl = new Audio();
     try {
       stingerEl.src = url;
@@ -527,13 +635,21 @@
     } catch(_) {}
   }
 
-  function setMuted(m) {
-    muted = m;
-    localStorage.setItem('sd-muted', m ? '1' : '0');
-    if (muted) {
+  function setSfxMuted(m) {
+    sfxMuted = m;
+    localStorage.setItem('sd-sfx-muted', m ? '1' : '0');
+    if (sfxMuted && stingerEl) {
+      try { stingerEl.pause(); } catch(_){}
+    }
+    updateAudioIcons();
+  }
+
+  function setBgmMuted(m) {
+    bgmMuted = m;
+    localStorage.setItem('sd-bgm-muted', m ? '1' : '0');
+    if (bgmMuted) {
       bgmA.volume = 0; bgmB.volume = 0;
       try { bgmA.pause(); bgmB.pause(); } catch(_){}
-      if (stingerEl) try { stingerEl.pause(); } catch(_){}
     } else if (activeBgm.src) {
       try {
         const p = activeBgm.play();
@@ -541,16 +657,18 @@
       } catch(_){}
       activeBgm.volume = BGM_VOL;
     }
-    updateMuteIcon();
+    updateAudioIcons();
   }
 
-  function updateMuteIcon() {
-    const btn = document.getElementById('sd-mute');
-    if (btn) btn.textContent = muted ? '🔇' : '🔊';
+  function updateAudioIcons() {
+    const sfxBtn = document.getElementById('sd-sfx-btn');
+    const bgmBtn = document.getElementById('sd-bgm-btn');
+    if (sfxBtn) sfxBtn.classList.toggle('off', sfxMuted);
+    if (bgmBtn) bgmBtn.classList.toggle('off', bgmMuted);
   }
 
   function vibe(pat) {
-    if (muted) return;
+    if (sfxMuted) return;
     if (navigator.vibrate) {
       try { navigator.vibrate(pat); } catch(_){}
     }
@@ -563,7 +681,7 @@
         try { activeBgm.pause(); } catch(_){}
       }
     } else {
-      if (activeBgm && activeBgm._wasPlaying && !muted) {
+      if (activeBgm && activeBgm._wasPlaying && !bgmMuted) {
         try {
           const p = activeBgm.play();
           if (p && p.catch) p.catch(() => {});
@@ -958,15 +1076,106 @@
     if (grid[0].some(t => t !== null)) return endGame();
   }
 
+  // ===================== LEADERBOARD =====================
+  const LB_API = '/api/scores';
+  let leaderboard = [];
+  let lastSubmittedScore = -1;
+
+  async function loadLeaderboard() {
+    try {
+      const r = await fetch(LB_API, { cache: 'no-store' });
+      if (!r.ok) throw new Error('GET ' + r.status);
+      leaderboard = await r.json();
+    } catch (e) {
+      leaderboard = [];
+      throw e;
+    }
+  }
+
+  function qualifies(s) {
+    if (s < 1) return false;
+    if (leaderboard.length < 10) return true;
+    return s > leaderboard[leaderboard.length - 1].score;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderLeaderboard(highlightName) {
+    const el = document.getElementById('sd-leaderboard');
+    let html = '<p class="sd-leaderboard-title">Top 10 — Global</p>';
+    if (!leaderboard.length) {
+      html += '<div class="sd-leaderboard-empty">No scores yet — be first!</div>';
+    } else {
+      html += leaderboard.map((s, i) => {
+        const isYou = highlightName && s.name === highlightName && s.score === lastSubmittedScore;
+        return '<div class="sd-leaderboard-row' + (isYou ? ' you' : '') + '">' +
+          '<span class="sd-leaderboard-rank">' + (i + 1) + '</span>' +
+          '<span class="sd-leaderboard-name">' + escapeHtml(s.name) + '</span>' +
+          '<span class="sd-leaderboard-score">' + s.score.toLocaleString() + '</span>' +
+          '</div>';
+      }).join('');
+    }
+    el.innerHTML = html;
+  }
+
+  async function submitNameClicked() {
+    const input = document.getElementById('sd-name-input');
+    const btn = document.getElementById('sd-submit-btn');
+    const name = input.value.trim();
+    if (!name) { input.focus(); return; }
+    btn.disabled = true; btn.textContent = '…';
+    try {
+      const r = await fetch(LB_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, score })
+      });
+      if (!r.ok) throw new Error('POST ' + r.status);
+      leaderboard = await r.json();
+      lastSubmittedScore = score;
+      localStorage.setItem('sd-last-name', name);
+      document.getElementById('sd-submit-row').classList.remove('show');
+      btn.textContent = '✓';
+      renderLeaderboard(name);
+      sfx('milestone');
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = 'Retry';
+    }
+  }
+
   function endGame() {
     gameOver = true; busy = false;
     saveBest();
     document.getElementById('sd-final').textContent = score.toLocaleString();
     document.getElementById('sd-final-best').textContent = best.toLocaleString();
+    const submitRow = document.getElementById('sd-submit-row');
+    const submitBtn = document.getElementById('sd-submit-btn');
+    submitRow.classList.remove('show');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit';
+    document.getElementById('sd-leaderboard').innerHTML =
+      '<p class="sd-leaderboard-title">Top 10 — Global</p><div class="sd-leaderboard-empty">Loading…</div>';
+    const nameInput = document.getElementById('sd-name-input');
+    const savedName = localStorage.getItem('sd-last-name');
+    if (savedName) nameInput.value = savedName;
     document.getElementById('sd-overlay').style.display = 'flex';
     sfx('over');
     vibe([40, 30, 40, 30, 80]);
     setTimeout(() => playBgm('audio/bgm-lose.mp3'), 250);
+
+    loadLeaderboard().then(() => {
+      renderLeaderboard();
+      if (qualifies(score)) {
+        submitRow.classList.add('show');
+      }
+    }).catch(() => {
+      document.getElementById('sd-leaderboard').innerHTML =
+        '<p class="sd-leaderboard-title">Top 10 — Global</p>' +
+        '<div class="sd-leaderboard-empty">Leaderboard unavailable</div>';
+    });
   }
 
   function shakeBoard() {
@@ -1192,10 +1401,12 @@
     playArea.addEventListener('pointercancel', () => { pointerStart = null; });
 
     document.addEventListener('keydown', (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
       if (e.key === 'm' || e.key === 'M') {
         unlockAudio();
-        setMuted(!muted);
-        sfx('tap');
+        const newState = !(sfxMuted && bgmMuted);
+        setSfxMuted(newState); setBgmMuted(newState);
+        if (!newState) sfx('tap');
         e.preventDefault();
         return;
       }
@@ -1227,15 +1438,25 @@
       unlockAudio(); sfx('tap'); stopBgm(); init();
     });
 
-    const muteBtn = document.getElementById('sd-mute');
-    muteBtn.addEventListener('click', (e) => {
+    document.getElementById('sd-sfx-btn').addEventListener('click', (e) => {
       e.stopPropagation();
       unlockAudio();
-      setMuted(!muted);
-      sfx('tap');
+      setSfxMuted(!sfxMuted);
+      if (!sfxMuted) sfx('tap');
+    });
+    document.getElementById('sd-bgm-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      unlockAudio();
+      setBgmMuted(!bgmMuted);
+      if (!sfxMuted) sfx('tap');
     });
 
-    updateMuteIcon();
+    document.getElementById('sd-submit-btn').addEventListener('click', submitNameClicked);
+    document.getElementById('sd-name-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); submitNameClicked(); }
+    });
+
+    updateAudioIcons();
   }
 
   setupInput();
